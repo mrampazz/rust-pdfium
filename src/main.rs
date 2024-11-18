@@ -29,8 +29,8 @@ async fn main() {
         .layer(DefaultBodyLimit::max(250 * 1024 * 1024));
 
     // Run the server
-    // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    // run our app with hyper, listening globally on port 1234
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:1234").await.unwrap();
     axum::serve(listener, app).await.unwrap()
 }
 
@@ -70,17 +70,17 @@ async fn process(
     let document = pdfium.load_pdf_from_byte_vec(pdf_data, None).unwrap();
 
     // Get the specified page
-    let page = document.pages().get(page_index as u16).unwrap();
+    let page: PdfPage<'_> = document.pages().get(page_index as u16).unwrap();
 
     // Render the page as an image
-    let render_config = PdfRenderConfig::new().set_target_width(800).set_format(PdfBitmapFormat::BGRA);
+    let render_config = PdfRenderConfig::new().set_target_width(800).set_format(PdfBitmapFormat::BGRA).set_reverse_byte_order(true).set_clear_color(PdfColor::WHITE.with_alpha(0));
 
     let dynamic_image = page
         .render_with_config(&render_config)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
         .unwrap()
         .as_image() // Renders this page to an image::DynamicImage
-        .into_rgb8(); // Converts to an RGB8 image
+        .into_rgba8();
 
     let mut image_buffer = Vec::new();
     dynamic_image
@@ -90,7 +90,7 @@ async fn process(
 
      // get page stuff
     let page_width = page.page_size().width().value;
-    let page_height = page.page_size().width().value;
+    let page_height = page.page_size().height().value;
 
     let text = page.text().unwrap();
     let chars: PdfPageTextChars = text.chars();
@@ -102,8 +102,11 @@ async fn process(
         let curr = char.unicode_string().unwrap();
         let font_family = char.font_name();
         let char_origin_x = char.origin_x().unwrap().value;
-        let char_origin_y = char.origin_y().unwrap().value;
+        let mut char_origin_y = char.origin_y().unwrap().value;
         let loose_bounds = char.loose_bounds().unwrap();
+
+        // fix up y coordinates due to different origin
+        char_origin_y = page_height - char_origin_y;
 
         if char_origin_x < 0.0 || char_origin_y < 0.0 || re.is_match(&curr) {
             continue;
@@ -120,26 +123,26 @@ async fn process(
                 groups.push(unwrapped_current_group.clone());
                 current_group = Some(GeneratedRect {
                     lx_pos: vec![char_origin_x],
-                    ly_pos: vec![char_origin_y],
+                    ly_pos: vec![char_origin_y - loose_bounds.height().value],
                     text: curr.clone(),
                     font_family: font_family.clone(),
                     right: loose_bounds.right.value,
                     font_size: loose_bounds.height().value,
                 });
             } else {
-                unwrapped_current_group.lx_pos.push(char_origin_x);
-                unwrapped_current_group.ly_pos.push(char_origin_y);
-                unwrapped_current_group.text.push_str(&curr);
-                unwrapped_current_group.right = loose_bounds.right.value;
                 unwrapped_current_group.font_size = unwrapped_current_group
                     .font_size
                     .max(loose_bounds.height().value);
+                unwrapped_current_group.lx_pos.push(char_origin_x);
+                unwrapped_current_group.ly_pos.push(char_origin_y - unwrapped_current_group.font_size);
+                unwrapped_current_group.text.push_str(&curr);
+                unwrapped_current_group.right = loose_bounds.right.value;
             }
         } else {
             // Handle the case where `current_group` is `None`
             current_group = Some(GeneratedRect {
                 lx_pos: vec![char_origin_x],
-                ly_pos: vec![char_origin_y],
+                ly_pos: vec![char_origin_y - loose_bounds.height().value],
                 text: curr.clone(),
                 font_family: font_family.clone(),
                 right: loose_bounds.right.value,
@@ -208,4 +211,31 @@ fn generate_text_svg(page_width: f32, page_height: f32, rects: Vec<GeneratedRect
 
     svg_content.push_str("</svg>");
     svg_content
+}
+
+// function to return the images as buffers at specific scales
+fn get_page_images(page: PdfPage<'_>, with_transparency: bool) -> Vec<Vec<u8>> {
+    let mut result: Vec<Vec<u8>> = Vec::new();
+    let mut color: PdfColor = PdfColor::WHITE;
+    if with_transparency {
+        color = color.with_alpha(0);
+    }
+    // TODO: define which scales you want
+    let scales: Vec<f32> = vec![0.25,0.5,1.0,1.5,2.0];
+    for (_i, scale) in scales.iter().enumerate() {
+        let render_config = PdfRenderConfig::new().set_format(PdfBitmapFormat::BGRA).set_reverse_byte_order(true).set_clear_color(color).scale_page_by_factor(*scale);
+        let dynamic_image = page
+            .render_with_config(&render_config)
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+            .unwrap()
+            .as_image() // Renders this page to an image::DynamicImage
+            .into_rgba8();
+        let mut image_buffer = Vec::new();
+        dynamic_image
+            .write_to(&mut Cursor::new(&mut image_buffer), image::ImageFormat::Png)
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+            .unwrap();
+        result.push(image_buffer);
+    }
+    return result;
 }
