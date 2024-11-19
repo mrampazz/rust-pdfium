@@ -1,0 +1,11 @@
+<svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="595.276" 
+        height="841.89" 
+        viewBox="0 0 595.276 841.89" 
+        style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-rendering: optimizeLegibility; shape-rendering: geometricPrecision"><title>text-layer</title><text 
+            style="font-size:165.13971pt; white-space: pre; text-rendering: geometricPrecision; dominant-baseline: hanging; font-weight: 400; letter-spacing: -0.01em; fill: rgb(230, 179, 179);"><tspan x="82.4609 227.12329 331.49158 425.95154" y="120.39972 75.480896 43.07367 13.743164">WACO</tspan></text><text 
+            style="font-size:39.905884pt; white-space: pre; text-rendering: geometricPrecision; dominant-baseline: hanging; font-weight: 400; letter-spacing: -0.01em; fill: rgb(230, 179, 179);"><tspan x="119.2785 143.78073 169.87918 192.22649 227.02444 238.51733 260.6651 265.85287" y="74.473206 66.86505 58.76129 51.822266 41.017212 37.44861 30.571533 28.960693">CHEMIE 6</tspan></text><text 
+            style="font-size:23.875488pt; white-space: pre; text-rendering: geometricPrecision; dominant-baseline: hanging; font-weight: 400; letter-spacing: -0.01em; fill: rgb(230, 179, 179);"><tspan x="176.6465 191.97456 206.63412 220.38641 227.26256 244.59616 257.96643 272.7454 286.11566 302.13614 317.89395 321.11716 332.05212 345.42242 358.79272 373.57166 388.2551 406.71088 420.08118" y="291.98138 287.22192 282.67004 278.39984 276.26477 270.88257 266.73102 262.14203 257.99048 253.01599 248.12311 247.12231 243.72693 239.57532 235.42377 230.83484 226.27551 220.54486 216.39331">ACTIVEREND LEERBOEK</tspan></text><text 
+            style="font-size:12pt; white-space: pre; text-rendering: geometricPrecision; dominant-baseline: hanging; font-weight: 400; letter-spacing: -0.01em; fill: rgb(230, 179, 179);"><tspan x="502.30368 510.16367" y="21.783142 21.783142">D </tspan></text><text 
+            style="font-size:10pt; white-space: pre; text-rendering: geometricPrecision; dominant-baseline: hanging; font-weight: 400; letter-spacing: -0.01em; fill: rgb(230, 179, 179);"><tspan x="490.62378 497.17377 504.80377 508.59378 515.1438" y="35.783142 35.783142 35.783142 35.783142 35.783142">DO/DG</tspan></text></svg>
